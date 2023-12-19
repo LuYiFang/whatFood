@@ -6,6 +6,7 @@ import Header from "./components/Header/Header";
 import {
   Box,
   Button,
+  Chip,
   Container,
   Grid,
   Toolbar,
@@ -13,6 +14,8 @@ import {
 } from "@mui/material";
 import { FetchApi } from "./utility/fetchApi";
 import { api } from "./apiConfig";
+
+const RESTAURANT_LIST_KEY = "restaurant_list";
 
 function App() {
   const [data, setData] = useState([{ option: "" }]);
@@ -39,8 +42,20 @@ function App() {
   };
 
   const getRestaurants = async () => {
-    const data = await FetchApi.get(api.restaurants + "/0/0");
-    setData(_.map(data, (v) => ({ option: v })));
+    let newData = sessionStorage.getItem(RESTAURANT_LIST_KEY);
+    if (newData) {
+      newData = JSON.parse(newData);
+      setData(newData);
+      return;
+    }
+
+    newData = await FetchApi.get(
+      api.restaurants + `/${position.lat}/${position.lng}`,
+    );
+    newData = _.map(newData, (v) => ({ option: v }));
+
+    setData(newData);
+    sessionStorage.setItem(RESTAURANT_LIST_KEY, JSON.stringify(newData));
   };
 
   const handleSpin = () => {
@@ -51,14 +66,24 @@ function App() {
 
   const handleSpinStop = () => {
     setMustSpin(false);
-    setRestaurants((v) => [...v, data[prizeNumber].option]);
+
+    let newRestaurants = [...restaurants, data[prizeNumber].option];
+    if (restaurants.length >= 11) {
+      newRestaurants = newRestaurants.slice(1);
+    }
+    setRestaurants(newRestaurants);
+  };
+
+  const deleteRestaurant = (restaurant) => {
+    setRestaurants(_.without(restaurants, restaurant));
+    setData(_.filter(data, (v) => v.option !== restaurant));
   };
 
   return (
     <div className="App">
       <Header />
       <Box sx={{ height: "calc( 100vh - 64px)" }}>
-        <Container maxWidth="md" sx={{ height: "100%" }}>
+        <Container maxWidth="lg" sx={{ height: "100%" }}>
           <Toolbar />
           <Grid container rowSpacing={2}>
             <Grid item xs={12}>
@@ -69,31 +94,51 @@ function App() {
                 {_.last(restaurants)}
               </Typography>
             </Grid>
-            <Grid
-              item
-              xs={12}
-              sx={{ justifyContent: "center", display: "flex" }}
-            >
-              <Wheel
-                spinDuration={0.05}
-                mustStartSpinning={mustSpin}
-                prizeNumber={prizeNumber}
-                data={data}
-                backgroundColors={[
-                  "#730202",
-                  "#F24405",
-                  "#F2B705",
-                  "#0E7364",
-                  "#F29F05",
-                ]}
-                textColors={["#ffffff"]}
-                onStopSpinning={handleSpinStop}
-              />
+            <Grid item xs={4}></Grid>
+            <Grid container item xs={4}>
+              <Grid
+                item
+                xs={12}
+                sx={{ justifyContent: "center", display: "flex" }}
+              >
+                <Wheel
+                  spinDuration={0.05}
+                  mustStartSpinning={mustSpin}
+                  prizeNumber={prizeNumber}
+                  data={data}
+                  backgroundColors={[
+                    "#730202",
+                    "#F24405",
+                    "#F2B705",
+                    "#0E7364",
+                    "#F29F05",
+                  ]}
+                  textColors={["#ffffff"]}
+                  onStopSpinning={handleSpinStop}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleSpin}
+                >
+                  Spin
+                </Button>
+              </Grid>
             </Grid>
-            <Grid item xs={12}>
-              <Button variant="contained" color="primary" onClick={handleSpin}>
-                Spin
-              </Button>
+            <Grid item xs={4}>
+              {_.map(restaurants, (restaurant, i) => {
+                return (
+                  <Box key={`restaurant-list-chip-${i}`} sx={{ mb: 1 }}>
+                    <Chip
+                      color="secondary"
+                      label={restaurant}
+                      onDelete={() => deleteRestaurant(restaurant)}
+                    />
+                  </Box>
+                );
+              })}
             </Grid>
           </Grid>
         </Container>

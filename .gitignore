@@ -25,3 +25,4 @@
 /app/config.toml
 /venv/
 
+/website/build_*
