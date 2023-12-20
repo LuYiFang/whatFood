@@ -5,9 +5,9 @@ RUN pip install --upgrade pip
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r  requirements.txt
 
-ENV APP_HOME /root
+ENV APP_HOME /root/app
 WORKDIR $APP_HOME
-COPY /app $APP_HOME/app
+COPY / $APP_HOME
 
 EXPOSE 8080
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["gunicorn", "main:app", "--workers", "1", "--bind", "0.0.0.0:8080", "-k", "uvicorn.workers.UvicornWorker"]

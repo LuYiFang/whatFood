@@ -11,6 +11,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.6.2",
+    "dotenv-cli": "^7.3.0",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "lodash": "^4.17.21",
@@ -26,6 +27,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:prod": "dotenv -e .env.production react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "prettier": "npx prettier ./src --write"
