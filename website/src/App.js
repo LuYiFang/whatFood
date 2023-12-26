@@ -16,6 +16,7 @@ import { FetchApi } from "./utility/fetchApi";
 import { api } from "./apiConfig";
 
 const RESTAURANT_LIST_KEY = "restaurant_list";
+const MAX_OPTIONS_LENGTH = 5;
 
 function App() {
   const [data, setData] = useState([{ option: "" }]);
@@ -31,7 +32,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (position.lat === null || position.lng === null) return
+    if (position.lat === null || position.lng === null) return;
     getRestaurants();
   }, [position]);
 
@@ -53,7 +54,19 @@ function App() {
     newData = await FetchApi.get(
       api.restaurants + `/${position.lat}/${position.lng}`,
     );
-    newData = _.map(newData, (v) => ({ option: v }));
+
+    newData = _.map(newData, (v) => {
+      let displayOption = v;
+
+      if ((v || "").length > MAX_OPTIONS_LENGTH) {
+        displayOption = v.slice(0, MAX_OPTIONS_LENGTH) + "...";
+      }
+
+      return {
+        option: displayOption,
+        fullOptions: v,
+      };
+    });
 
     setData(newData);
     sessionStorage.setItem(RESTAURANT_LIST_KEY, JSON.stringify(newData));
@@ -68,7 +81,7 @@ function App() {
   const handleSpinStop = () => {
     setMustSpin(false);
 
-    let newRestaurants = [...restaurants, data[prizeNumber].option];
+    let newRestaurants = [...restaurants, data[prizeNumber].fullOptions];
     if (restaurants.length >= 11) {
       newRestaurants = newRestaurants.slice(1);
     }
@@ -77,7 +90,7 @@ function App() {
 
   const deleteRestaurant = (restaurant) => {
     setRestaurants(_.without(restaurants, restaurant));
-    setData(_.filter(data, (v) => v.option !== restaurant));
+    setData(_.filter(data, (v) => v.fullOptions !== restaurant));
   };
 
   return (
@@ -95,8 +108,8 @@ function App() {
                 {_.last(restaurants)}
               </Typography>
             </Grid>
-            <Grid item xs={4}></Grid>
-            <Grid container item xs={4}>
+            <Grid item xs={3}></Grid>
+            <Grid container item xs={6}>
               <Grid
                 item
                 xs={12}
@@ -123,12 +136,13 @@ function App() {
                   variant="contained"
                   color="primary"
                   onClick={handleSpin}
+                  disabled={mustSpin}
                 >
                   Spin
                 </Button>
               </Grid>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={3}>
               {_.map(restaurants, (restaurant, i) => {
                 return (
                   <Box key={`restaurant-list-chip-${i}`} sx={{ mb: 1 }}>
