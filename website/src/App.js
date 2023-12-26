@@ -129,6 +129,11 @@ function App() {
                   ]}
                   textColors={["#ffffff"]}
                   onStopSpinning={handleSpinStop}
+                  pointerProps={{
+                    style: {
+                      filter: "hue-rotate(75deg)",
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
