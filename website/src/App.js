@@ -21,7 +21,7 @@ function App() {
   const [data, setData] = useState([{ option: "" }]);
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeNumber, setPrizeNumber] = useState(-1);
-  const [position, setPosition] = useState({ lat: 0, lng: 0 });
+  const [position, setPosition] = useState({ lat: null, lng: null });
   const [restaurants, setRestaurants] = useState([]);
 
   useEffect(() => {
@@ -31,6 +31,7 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (position.lat === null || position.lng === null) return
     getRestaurants();
   }, [position]);
 

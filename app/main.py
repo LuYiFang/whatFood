@@ -27,12 +27,12 @@ GOOGLE_MAP_KEY = config['google']['map_key']
 gmaps = googlemaps.Client(key=GOOGLE_MAP_KEY)
 
 
-@app.get("/")
+@app.get("/api")
 def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/restaurants/{lat}/{lng}")
+@app.get("/api/restaurants/{lat}/{lng}")
 def find_restaurants(params: LatLngIn = Depends()):
     try:
         restaurants = gmaps.places_nearby(
