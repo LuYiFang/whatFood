@@ -6,6 +6,7 @@ import toml
 import uvicorn
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from inOutSchema import LatLngIn
 
@@ -22,6 +23,8 @@ app.add_middleware(
     allow_methods=["GET"],
     allow_headers=["Content-Type"],
 )
+
+app.mount("/app", StaticFiles(directory="../website/build_dev"), name="static")
 
 GOOGLE_MAP_KEY = config['google']['map_key']
 gmaps = googlemaps.Client(key=GOOGLE_MAP_KEY)
