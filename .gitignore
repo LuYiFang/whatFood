@@ -22,7 +22,7 @@
 /website/yarn-debug.log*
 /website/yarn-error.log*
 
-/app/config.toml
+/api/config.toml
 /venv/
 
 /website/build_*
