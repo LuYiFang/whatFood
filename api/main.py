@@ -15,6 +15,7 @@ config = toml.load('config.toml')
 app = FastAPI()
 
 origins = config['origins']
+static_web_path = config['static_web_path']
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,7 +25,7 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 
-app.mount("/app", StaticFiles(directory="../website/build_dev"), name="static")
+app.mount("/app", StaticFiles(directory=static_web_path), name="static")
 
 GOOGLE_MAP_KEY = config['google']['map_key']
 gmaps = googlemaps.Client(key=GOOGLE_MAP_KEY)

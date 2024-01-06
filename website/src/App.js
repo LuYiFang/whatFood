@@ -108,8 +108,8 @@ function App() {
                 {_.last(restaurants)}
               </Typography>
             </Grid>
-            <Grid item xs={3}></Grid>
-            <Grid container item xs={6}>
+            <Grid item lg={3} sm={12}></Grid>
+            <Grid container item lg={6} sm={12}>
               <Grid
                 item
                 xs={12}
@@ -147,7 +147,7 @@ function App() {
                 </Button>
               </Grid>
             </Grid>
-            <Grid item xs={3}>
+            <Grid item lg={3} sm={12} xs={12}>
               {_.map(restaurants, (restaurant, i) => {
                 return (
                   <Box key={`restaurant-list-chip-${i}`} sx={{ mb: 1 }}>
