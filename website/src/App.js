@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./App.css";
 import { Wheel } from "react-custom-roulette";
 import _ from "lodash";
@@ -7,13 +7,21 @@ import {
   Box,
   Button,
   Chip,
+  Collapse,
   Container,
   Grid,
+  List,
+  ListItemButton,
+  Stack,
   Toolbar,
   Typography,
 } from "@mui/material";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
+import { styled } from "@mui/material/styles";
 import { FetchApi } from "./utility/fetchApi";
 import { api } from "./apiConfig";
+import { createCsv, createExcel, handleFileUpdate } from "./utility/utility";
 
 const RESTAURANT_LIST_KEY = "restaurant_list";
 const MAX_OPTIONS_LENGTH = 5;
@@ -24,6 +32,9 @@ function App() {
   const [prizeNumber, setPrizeNumber] = useState(-1);
   const [position, setPosition] = useState({ lat: null, lng: null });
   const [restaurants, setRestaurants] = useState([]);
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+
+  const uploadFormRef = useRef();
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -47,7 +58,7 @@ function App() {
     let newData = sessionStorage.getItem(RESTAURANT_LIST_KEY);
     if (newData) {
       newData = JSON.parse(newData);
-      setData(newData);
+      setData(formatRestaurants(newData));
       return;
     }
 
@@ -55,7 +66,12 @@ function App() {
       api.restaurants + `/${position.lat}/${position.lng}`,
     );
 
-    newData = _.map(newData, (v) => {
+    setData(formatRestaurants(newData));
+    sessionStorage.setItem(RESTAURANT_LIST_KEY, JSON.stringify(newData));
+  };
+
+  const formatRestaurants = (newData) => {
+    return _.map(newData, (v) => {
       let displayOption = v;
 
       if ((v || "").length > MAX_OPTIONS_LENGTH) {
@@ -67,9 +83,6 @@ function App() {
         fullOptions: v,
       };
     });
-
-    setData(newData);
-    sessionStorage.setItem(RESTAURANT_LIST_KEY, JSON.stringify(newData));
   };
 
   const handleSpin = () => {
@@ -93,6 +106,27 @@ function App() {
     setData(_.filter(data, (v) => v.fullOptions !== restaurant));
   };
 
+  const handleUploadRestaurants = async (e) => {
+    const uploadData = await handleFileUpdate(e.target.files[0]);
+    uploadFormRef.current.reset();
+
+    if (!uploadData) return;
+
+    setData(formatRestaurants(uploadData));
+  };
+
+  const handleDownloadRestaurants = async (downloadFormat) => {
+    const downloadData = _.map(data, (v) => [v.fullOptions]);
+    const filename = "restaurants";
+
+    if (downloadFormat === "csv") {
+      createCsv(filename, downloadData);
+      return;
+    }
+
+    createExcel(filename, { restaurants: downloadData });
+  };
+
   return (
     <div className="App">
       <Header />
@@ -108,8 +142,72 @@ function App() {
                 {_.last(restaurants)}
               </Typography>
             </Grid>
-            <Grid item lg={3} sm={12}></Grid>
-            <Grid container item lg={6} sm={12}>
+            <Grid
+              item
+              lg={3}
+              sm={12}
+              xs={12}
+              display={"flex"}
+              justifyContent={"center"}
+              flexDirection={"column"}
+              alignItems={"center"}
+            >
+              <Box
+                sx={{
+                  maxWidth: 260,
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                }}
+              >
+                <Stack>
+                  <form
+                    method="post"
+                    action=""
+                    encType="multipart/form-data"
+                    ref={uploadFormRef}
+                  >
+                    <Button
+                      component="label"
+                      variant="contained"
+                      sx={{ mb: 1, width: "100%" }}
+                      startIcon={<CloudUploadIcon />}
+                      onChange={handleUploadRestaurants}
+                    >
+                      Upload Restaurants
+                      <VisuallyHiddenInput type="file" />
+                    </Button>
+                  </form>
+                </Stack>
+
+                <Stack>
+                  <Button
+                    variant="contained"
+                    sx={{ width: "100%" }}
+                    startIcon={<CloudDownloadIcon />}
+                    onClick={() => setIsDownloadOpen(!isDownloadOpen)}
+                  >
+                    Download Restaurants
+                  </Button>
+                  <Collapse in={isDownloadOpen} timeout="auto" unmountOnExit>
+                    <List>
+                      <ListItemButton
+                        onClick={() => handleDownloadRestaurants("csv")}
+                      >
+                        csv
+                      </ListItemButton>
+                      <ListItemButton
+                        onClick={() => handleDownloadRestaurants("excel")}
+                      >
+                        excel
+                      </ListItemButton>
+                    </List>
+                  </Collapse>
+                </Stack>
+              </Box>
+            </Grid>
+            <Grid container item lg={6} sm={12} xs={12}>
               <Grid
                 item
                 xs={12}
@@ -147,7 +245,7 @@ function App() {
                 </Button>
               </Grid>
             </Grid>
-            <Grid item lg={3} sm={12} xs={12}>
+            <Grid item lg={3} sm={12} xs={12} mb={4}>
               {_.map(restaurants, (restaurant, i) => {
                 return (
                   <Box key={`restaurant-list-chip-${i}`} sx={{ mb: 1 }}>
@@ -168,3 +266,15 @@ function App() {
 }
 
 export default App;
+
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
+  height: 1,
+  overflow: "hidden",
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  whiteSpace: "nowrap",
+  width: 1,
+});
